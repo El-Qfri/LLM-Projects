@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodBloom — Track your mood. Grow your bloom.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,500&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FBF6EE;
+    --paper:#FFFDF8;
+    --wood:#8B5E3C;
+    --wood-dark:#5C3B22;
+    --wood-light:#A9744E;
+    --ink:#3E2E23;
+    --ink-soft:#6B5545;
+    --sage:#8FA789;
+    --sage-dark:#6E8768;
+    --rose:#E8B4B8;
+    --gold:#D4A24C;
+    --gold-light:#EFCB86;
+    --line:#E4D9C6;
+    --shadow: rgba(74,50,37,0.18);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 10% 5%, #FBF1E0 0%, transparent 45%),
+      radial-gradient(circle at 90% 0%, #F3E9D6 0%, transparent 40%),
+      var(--bg);
+    font-family:'Quicksand', sans-serif;
+    color:var(--ink);
+    padding:28px 18px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* ---------- HEADER ---------- */
+  header{text-align:center; margin-bottom:8px;}
+  .logo-row{display:flex; align-items:center; justify-content:center; gap:22px;}
+  .logo-row svg{flex:0 0 auto;}
+  .brand-title{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size:clamp(2.4rem, 6vw, 3.4rem);
+    letter-spacing:0.5px;
+    color:var(--wood-dark);
+    margin:0;
+    line-height:1;
+  }
+  .brand-title .bloom{color:var(--sage-dark); font-style:italic; font-weight:500;}
+  .tagline{
+    font-family:'Caveat', cursive;
+    font-size:1.5rem;
+    color:var(--ink-soft);
+    margin:6px 0 2px;
+  }
+  .datetime{
+    font-size:0.92rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    opacity:0.85;
+  }
+
+  /* ---------- GAUGES ---------- */
+  .gauges{
+    display:flex; justify-content:center; gap:60px; margin:26px 0 10px; flex-wrap:wrap;
+  }
+  .gauge-card{text-align:center;}
+  .gauge-card .cap{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; color:var(--wood-dark);
+    margin-top:6px;
+  }
+  .gauge-card .sub{font-size:0.78rem; color:var(--ink-soft);}
+  .gauge-ring-bg{fill:none; stroke:#EDE3D0; stroke-width:12;}
+  .gauge-ring-fill{
+    fill:none; stroke-linecap:round; stroke-width:12;
+    transition: stroke-dashoffset 1.1s cubic-bezier(.34,1.4,.64,1), stroke 0.6s ease;
+  }
+  .gauge-label{font-family:'Fraunces',serif; font-weight:700; font-size:1.5rem; fill:var(--wood-dark);}
+
+  section.panel{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:22px;
+    box-shadow:0 10px 26px -14px var(--shadow);
+    padding:24px clamp(14px,3vw,32px);
+    margin:22px 0;
+  }
+  h2.panel-title{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.25rem; color:var(--wood-dark);
+    margin:0 0 14px; display:flex; align-items:center; gap:8px;
+  }
+
+  /* ---------- MOOD SLIDER + TRACKER LAYOUT ---------- */
+  .mood-tracker-row{display:flex; gap:28px; align-items:flex-start; flex-wrap:wrap;}
+  .mood-slider-col{flex:1 1 480px; min-width:300px;}
+  .tracker-col{flex:0 0 300px; display:flex; flex-direction:column; align-items:center;}
+
+  .cat-scroller{
+    display:flex; gap:10px; overflow-x:auto; padding-bottom:10px; scrollbar-width:thin;
+  }
+  .cat-scroller::-webkit-scrollbar{height:6px;}
+  .cat-scroller::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+  .cat-btn{
+    flex:0 0 auto;
+    border:2px solid transparent;
+    border-radius:16px;
+    padding:12px 18px;
+    font-family:'Fraunces',serif; font-weight:600; font-size:0.95rem;
+    color:var(--ink); cursor:pointer;
+    transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    box-shadow:0 4px 10px -6px rgba(0,0,0,.25);
+  }
+  .cat-btn:hover{transform:translateY(-3px);}
+  .cat-btn.active{border-color:var(--wood-dark); transform:translateY(-3px) scale(1.03); box-shadow:0 8px 16px -8px rgba(0,0,0,.35);}
+
+  .submood-row{
+    display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; min-height:56px;
+  }
+  .sub-btn{
+    border:1px solid rgba(0,0,0,.08);
+    border-radius:12px;
+    padding:10px 16px;
+    font-size:0.88rem; font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease;
+    opacity:0; animation:popIn .3s ease forwards;
+  }
+  .sub-btn:hover{transform:translateY(-2px) scale(1.04); box-shadow:0 6px 12px -6px rgba(0,0,0,.3);}
+  .sub-btn.logged-today{outline:2px solid var(--wood-dark); outline-offset:2px;}
+  @keyframes popIn{from{opacity:0; transform:translateY(6px) scale(.9);} to{opacity:1; transform:translateY(0) scale(1);}}
+
+  .log-hint{font-size:0.8rem; color:var(--ink-soft); margin-top:14px; font-style:italic;}
+  .today-status{
+    margin-top:10px; padding:10px 14px; border-radius:12px; background:#F3ECDD;
+    font-size:0.85rem; display:flex; align-items:center; gap:8px;
+  }
+  .today-swatch{width:16px;height:16px;border-radius:50%; border:1px solid rgba(0,0,0,.15); flex:0 0 auto;}
+
+  .tracker-col svg{max-width:100%; height:auto;}
+  .tracker-legend{font-size:0.72rem; color:var(--ink-soft); text-align:center; margin-top:8px; line-height:1.5;}
+
+  /* ---------- RADIO + PLAYER ---------- */
+  .radio-row{display:flex; justify-content:center; align-items:center; gap:36px; flex-wrap:wrap;}
+  .radio-body{filter:drop-shadow(0 18px 20px rgba(74,50,37,.35));}
+  .dial-glow{transition:fill 0.8s ease, filter 0.8s ease;}
+  .knob{transform-origin:center; transition:transform .4s ease;}
+  .radio-row.playing .knob{animation:knobwiggle 3.2s ease-in-out infinite;}
+  @keyframes knobwiggle{0%,100%{transform:rotate(-8deg);}50%{transform:rotate(8deg);}}
+  .speaker-hole{fill:var(--wood-dark); opacity:.55;}
+  .radio-row.playing .speaker-hole{animation:pulseHole 1.1s ease-in-out infinite;}
+  @keyframes pulseHole{0%,100%{opacity:.4;}50%{opacity:.85;}}
+
+  .player{
+    background:var(--paper); border:1px solid var(--line); border-radius:20px;
+    padding:20px 22px; width:280px; box-shadow:0 10px 22px -14px var(--shadow);
+  }
+  .player .track-name{font-family:'Fraunces',serif; font-weight:600; font-size:1rem; color:var(--wood-dark); margin-bottom:2px;}
+  .player .track-cat{font-size:0.78rem; color:var(--ink-soft); margin-bottom:14px;}
+  .progress-wrap{display:flex; align-items:center; gap:8px; font-size:0.7rem; color:var(--ink-soft);}
+  .progress-track{flex:1; height:6px; background:#EDE3D0; border-radius:6px; cursor:pointer; position:relative; overflow:hidden;}
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--gold),var(--sage)); width:0%; transition:width .15s linear;}
+  .player-controls{display:flex; align-items:center; justify-content:center; gap:16px; margin:14px 0 12px;}
+  .ctrl-btn{
+    background:var(--wood); color:#fff; border:none; border-radius:50%;
+    width:44px; height:44px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:1.1rem; box-shadow:0 6px 12px -6px rgba(0,0,0,.4);
+    transition:transform .15s ease, background .2s ease;
+  }
+  .ctrl-btn.big{width:54px;height:54px; background:var(--wood-dark); font-size:1.3rem;}
+  .ctrl-btn:hover{transform:scale(1.08);}
+  .ctrl-btn:active{transform:scale(.94);}
+  .volume-row{display:flex; align-items:center; gap:8px; margin-top:4px;}
+  .volume-row input[type=range]{flex:1; accent-color:var(--sage-dark);}
+
+  /* ---------- CAT + STORY ---------- */
+  .companion-row{display:flex; gap:26px; align-items:flex-end; flex-wrap:wrap; justify-content:center;}
+  .speech-bubble{
+    position:relative; background:#fff; border:1px solid var(--line);
+    border-radius:18px; padding:16px 20px; max-width:320px;
+    font-family:'Caveat', cursive; font-size:1.35rem; color:var(--ink);
+    box-shadow:0 8px 18px -12px var(--shadow);
+  }
+  .speech-bubble::after{
+    content:""; position:absolute; left:-14px; bottom:22px;
+    border:10px solid transparent; border-right-color:#fff;
+  }
+  .story-card{
+    background:linear-gradient(180deg,#FFFDF7,#FBF3E0);
+    border:1px solid var(--line); border-radius:16px;
+    padding:20px 24px; margin-top:18px;
+    position:relative;
+  }
+  .story-card::before{
+    content:"✦ Today's Little Story ✦"; display:block;
+    font-family:'Fraunces',serif; font-weight:600; font-size:0.85rem;
+    color:var(--wood-dark); margin-bottom:8px; letter-spacing:.03em;
+  }
+  .story-text{font-family:'Caveat', cursive; font-size:1.4rem; line-height:1.5; color:var(--ink);}
+
+  /* ---------- FLOWERS FOOTER ---------- */
+  .flower-field{
+    margin-top:8px; min-height:90px; display:flex; align-items:flex-end; gap:2px;
+    justify-content:center; flex-wrap:wrap; padding-top:20px; position:relative;
+  }
+  .flower-field::before{
+    content:""; position:absolute; bottom:12px; left:5%; right:5%; height:2px;
+    background:repeating-linear-gradient(90deg, var(--sage) 0 8px, transparent 8px 14px);
+    opacity:.6;
+  }
+  .flower{opacity:0; transform:translateY(10px) scale(.6); animation:growFlower .6s ease forwards;}
+  @keyframes growFlower{to{opacity:1; transform:translateY(0) scale(1);}}
+  .empty-field{font-size:0.85rem; color:var(--ink-soft); font-style:italic; padding-bottom:20px;}
+
+  footer{text-align:center; margin-top:30px; font-size:0.75rem; color:var(--ink-soft);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important; transition-duration:.001s !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-row">
+      <svg id="rainbowLeft" width="70" height="46" viewBox="0 0 70 46"></svg>
+      <h1 class="brand-title">Mood<span class="bloom">Bloom</span></h1>
+      <svg id="rainbowRight" width="70" height="46" viewBox="0 0 70 46"></svg>
+    </div>
+    <p class="tagline">Track your mood. Grow your bloom.</p>
+    <div class="datetime" id="datetimeEl">—</div>
+  </header>
+
+  <!-- GAUGES -->
+  <div class="gauges">
+    <div class="gauge-card">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle class="gauge-ring-bg" cx="75" cy="75" r="60"></circle>
+        <circle class="gauge-ring-fill" id="weeklyRing" cx="75" cy="75" r="60"
+          stroke="#D4A24C" stroke-dasharray="377" stroke-dashoffset="377"
+          transform="rotate(-90 75 75)"></circle>
+        <text class="gauge-label" id="weeklyLabel" x="75" y="82" text-anchor="middle">0%</text>
+      </svg>
+      <div class="cap">Weekly Mood</div>
+      <div class="sub" id="weeklySub">no logs yet</div>
+    </div>
+    <div class="gauge-card">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle class="gauge-ring-bg" cx="75" cy="75" r="60"></circle>
+        <circle class="gauge-ring-fill" id="monthlyRing" cx="75" cy="75" r="60"
+          stroke="#8FA789" stroke-dasharray="377" stroke-dashoffset="377"
+          transform="rotate(-90 75 75)"></circle>
+        <text class="gauge-label" id="monthlyLabel" x="75" y="82" text-anchor="middle">0%</text>
+      </svg>
+      <div class="cap">Monthly Mood</div>
+      <div class="sub" id="monthlySub">no logs yet</div>
+    </div>
+  </div>
+
+  <!-- MOOD SLIDER + TRACKER -->
+  <section class="panel">
+    <h2 class="panel-title">🌤️ How are you feeling right now?</h2>
+    <div class="mood-tracker-row">
+      <div class="mood-slider-col">
+        <div class="cat-scroller" id="catScroller"></div>
+        <div class="submood-row" id="submoodRow"></div>
+        <div class="today-status" id="todayStatus" style="display:none;">
+          <span class="today-swatch" id="todaySwatch"></span>
+          <span id="todayStatusText"></span>
+        </div>
+        <div class="log-hint">Pick a feeling, then a shade of it — it'll bloom on your calendar and cue up a matching tune.</div>
+      </div>
+      <div class="tracker-col">
+        <svg id="trackerSvg" width="280" height="280" viewBox="0 0 280 280"></svg>
+        <div class="tracker-legend">Center = Day 1 · rings = Days 2–11, 12–21, 22–31<br>Your month, mapped in color.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RADIO + PLAYER -->
+  <section class="panel">
+    <h2 class="panel-title">📻 The MoodBloom Radio</h2>
+    <div class="radio-row" id="radioRow">
+      <svg id="radioSvg" class="radio-body" width="300" height="240" viewBox="0 0 300 240"></svg>
+      <div class="player">
+        <div class="track-name" id="trackName">Select a mood to begin</div>
+        <div class="track-cat" id="trackCat">Nothing playing yet</div>
+        <div class="progress-wrap">
+          <span id="curTime">0:00</span>
+          <div class="progress-track" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+          <span id="durTime">0:00</span>
+        </div>
+        <div class="player-controls">
+          <button class="ctrl-btn" id="skipBtn" title="Skip">⏭</button>
+          <button class="ctrl-btn big" id="playBtn" title="Play/Pause">▶</button>
+          <button class="ctrl-btn" id="restartBtn" title="Restart">⏮</button>
+        </div>
+        <div class="volume-row">
+          <span>🔈</span>
+          <input type="range" id="volumeSlider" min="0" max="100" value="60">
+          <span>🔊</span>
+        </div>
+      </div>
+    </div>
+    <audio id="audioEl" preload="none"></audio>
+  </section>
+
+  <!-- CAT + STORY -->
+  <section class="panel">
+    <div class="companion-row">
+      <svg id="catSvg" width="150" height="150" viewBox="0 0 150 150"></svg>
+      <div class="speech-bubble" id="quoteBubble">Loading a little encouragement…</div>
+    </div>
+    <div class="story-card">
+      <div class="story-text" id="storyText">…</div>
+    </div>
+  </section>
+
+  <!-- FLOWERS -->
+  <section class="panel">
+    <h2 class="panel-title">🌸 Your Garden This Month</h2>
+    <div class="flower-field" id="flowerField"></div>
+  </section>
+
+  <footer>MoodBloom · your feelings, gently kept · music simulated locally (connect Spotify/YouTube Music API for live playback)</footer>
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+const MOOD_CATEGORIES = [
+  { name:'Joyful',   score:7, submoods:[
+      {name:'Joyful', color:'#FFF4E0'}, {name:'Content', color:'#FFF9C4'},
+      {name:'Happy', color:'#FFECB3'}, {name:'Elated', color:'#FDF5E6'} ] },
+  { name:'Calm',     score:6, submoods:[
+      {name:'Calm', color:'#D6EAF8'}, {name:'Relaxed', color:'#E8F8F5'},
+      {name:'Peaceful', color:'#D5F5F3'}, {name:'Centered', color:'#F0F3F4'} ] },
+  { name:'Neutral',  score:5, submoods:[
+      {name:'Neutral', color:'#F0E6D3'}, {name:'Indifferent', color:'#F5F0E1'},
+      {name:'Okay', color:'#E8E0D5'}, {name:'Balanced', color:'#EAEAEA'} ] },
+  { name:'Tired',    score:4, submoods:[
+      {name:'Tired', color:'#D7CCC8'}, {name:'Fatigued', color:'#C8B6B1'},
+      {name:'Drained', color:'#B8A9A6'}, {name:'Lethargic', color:'#E0D5D0'} ] },
+  { name:'Anxious',  score:3, submoods:[
+      {name:'Anxious', color:'#E8D5F5'}, {name:'Uneasy', color:'#DCC7F0'},
+      {name:'Worried', color:'#F0E0F5'}, {name:'Nervous', color:'#E5CCE8'} ] },
+  { name:'Sad',      score:2, submoods:[
+      {name:'Sad', color:'#C5CAE8'}, {name:'Blue', color:'#B0B8D6'},
+      {name:'Lonely', color:'#D3D9F0'}, {name:'Down', color:'#A8B5D9'} ] },
+  { name:'Irritated',score:1, submoods:[
+      {name:'Irritated', color:'#C5CAE8'}, {name:'Annoyed', color:'#B0B8D6'},
+      {name:'Frustrated', color:'#D3D9F0'}, {name:'Grumpy', color:'#A8B5D9'} ] },
+];
+
+const TRACKS = [
+  { cat:'Joyful',    name:'Sunlit Porch Swing',  src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { cat:'Calm',      name:'Slow Tide, Soft Sand', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { cat:'Neutral',   name:'Kitchen Radio Hum',    src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+  { cat:'Tired',     name:'Sunday Afternoon Nap', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
+  { cat:'Anxious',   name:'Pacing the Hallway',   src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3' },
+  { cat:'Sad',       name:'Rain on the Window',   src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3' },
+  { cat:'Irritated', name:'Static and Sighs',     src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3' },
+];
+
+const QUOTES = [
+  "Every bloom was once a bud that didn't give up.",
+  "Feelings are visitors — let them come and go.",
+  "Small steps still move the garden forward.",
+  "You are allowed to rest without earning it.",
+  "Even cloudy days feed the roots.",
+  "Be gentle with yourself, today counts too.",
+  "Your mood is weather, not climate.",
+  "One honest feeling is worth more than ten performed ones."
+];
+
+const STORIES = [
+  "A gardener noticed one plant always leaned toward the window. Instead of forcing it straight, she turned the whole pot toward the light. It bloomed by spring.",
+  "A boy found a cracked teacup and almost threw it out. His grandmother filled the crack with gold lacquer instead. It became the piece guests admired most.",
+  "A fox waited out a storm under a thin ledge, cold and small. When the sky cleared, it stepped out first — before any bird dared sing.",
+  "An old radio only worked if you tapped it twice. Nobody minded. The tapping became part of the song.",
+  "A sailor kept one dead compass as a keepsake. It never pointed north again, but it reminded him he'd always found his way home anyway.",
+  "A seed sat in dry soil for three years, waiting. One rainy Tuesday, without fanfare, it simply decided to grow.",
+  "A librarian re-shelved a lonely book every day for a decade. One day a child finally pulled it down — and read it twice.",
+  "A snail crossed the garden path so slowly that a child gave up watching. By morning, it had made it all the way home."
+];
+
+const DAY_MS = 24*60*60*1000;
+
+/* ===================== STATE / STORAGE ===================== */
+const todayKey = d => {
+  const dt = d || new Date();
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+};
+function loadLogs(){
+  try{ return JSON.parse(localStorage.getItem('moodbloom_logs')||'{}'); }catch(e){ return {}; }
+}
+function saveLogs(logs){ localStorage.setItem('moodbloom_logs', JSON.stringify(logs)); }
+let logs = loadLogs();
+
+/* ===================== HEADER: RAINBOWS + CLOCK ===================== */
+function drawRainbow(svgEl){
+  const colors = ['#E57373','#FFB74D','#FFF176','#81C784','#64B5F6','#9575CD'];
+  const cx=35, cyBase=44;
+  let html='';
+  colors.forEach((c,i)=>{
+    const r = 34 - i*5;
+    html += `<path d="M ${cx-r} ${cyBase} A ${r} ${r} 0 0 1 ${cx+r} ${cyBase}" stroke="${c}" stroke-width="4.2" fill="none" stroke-linecap="round"/>`;
+  });
+  svgEl.innerHTML = html;
+}
+drawRainbow(document.getElementById('rainbowLeft'));
+drawRainbow(document.getElementById('rainbowRight'));
+
+function updateClock(){
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  const dateStr = now.toLocaleDateString(undefined, opts);
+  const timeStr = now.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('datetimeEl').textContent = `${dateStr}  ·  ${timeStr}`;
+}
+updateClock();
+setInterval(updateClock, 1000*15);
+
+/* ===================== GAUGES ===================== */
+const CIRC = 2*Math.PI*60; // 377
+function scoreToPct(avg){ return Math.max(0, Math.min(100, (avg/7)*100)); }
+function colorForScore(avg){
+  // blend between rose(low) -> gold(mid) -> sage(high)
+  if(avg <= 4) return mixHex('#C5CAE8','#D4A24C', (avg-1)/3);
+  return mixHex('#D4A24C','#8FA789', (avg-4)/3);
+}
+function mixHex(a,b,t){
+  t = Math.max(0,Math.min(1,t));
+  const pa = hexToRgb(a), pb = hexToRgb(b);
+  const r = Math.round(pa.r + (pb.r-pa.r)*t);
+  const g = Math.round(pa.g + (pb.g-pa.g)*t);
+  const bl= Math.round(pa.b + (pb.b-pa.b)*t);
+  return `rgb(${r},${g},${bl})`;
+}
+function hexToRgb(h){ h=h.replace('#',''); return {r:parseInt(h.substr(0,2),16), g:parseInt(h.substr(2,2),16), b:parseInt(h.substr(4,2),16)}; }
+
+function computeAverage(daysBack){
+  const now = new Date();
+  let sum=0, count=0;
+  for(let i=0;i<daysBack;i++){
+    const d = new Date(now.getTime() - i*DAY_MS);
+    const k = todayKey(d);
+    if(logs[k]){ sum += logs[k].score; count++; }
+  }
+  return count? sum/count : null;
+}
+function computeMonthlyAverage(){
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  let sum=0,count=0;
+  Object.keys(logs).forEach(k=>{
+    if(k.startsWith(ym)){ sum += logs[k].score; count++; }
+  });
+  return count? sum/count : null;
+}
+function updateGauges(){
+  const wk = computeAverage(7);
+  const mo = computeMonthlyAverage();
+  const wkRing = document.getElementById('weeklyRing');
+  const moRing = document.getElementById('monthlyRing');
+  const wkLabel = document.getElementById('weeklyLabel');
+  const moLabel = document.getElementById('monthlyLabel');
+
+  if(wk === null){
+    wkRing.style.strokeDashoffset = CIRC;
+    wkLabel.textContent = '—';
+    document.getElementById('weeklySub').textContent = 'no logs yet';
+  } else {
+    const pct = scoreToPct(wk);
+    wkRing.setAttribute('stroke', colorForScore(wk));
+    wkRing.style.strokeDashoffset = CIRC - (pct/100)*CIRC;
+    wkLabel.textContent = Math.round(pct)+'%';
+    document.getElementById('weeklySub').textContent = `avg mood ${wk.toFixed(1)}/7`;
+  }
+  if(mo === null){
+    moRing.style.strokeDashoffset = CIRC;
+    moLabel.textContent = '—';
+    document.getElementById('monthlySub').textContent = 'no logs yet';
+  } else {
+    const pct = scoreToPct(mo);
+    moRing.setAttribute('stroke', colorForScore(mo));
+    moRing.style.strokeDashoffset = CIRC - (pct/100)*CIRC;
+    moLabel.textContent = Math.round(pct)+'%';
+    document.getElementById('monthlySub').textContent = `avg mood ${mo.toFixed(1)}/7`;
+  }
+}
+
+/* ===================== MOOD SLIDER ===================== */
+const catScroller = document.getElementById('catScroller');
+const submoodRow = document.getElementById('submoodRow');
+let activeCatIndex = null;
+
+function renderCategories(){
+  catScroller.innerHTML='';
+  MOOD_CATEGORIES.forEach((cat, idx)=>{
+    const btn = document.createElement('button');
+    btn.className='cat-btn';
+    btn.style.background = cat.submoods[0].color;
+    btn.textContent = cat.name;
+    btn.addEventListener('click', ()=> selectCategory(idx));
+    catScroller.appendChild(btn);
+  });
+}
+function selectCategory(idx){
+  activeCatIndex = idx;
+  [...catScroller.children].forEach((c,i)=> c.classList.toggle('active', i===idx));
+  renderSubmoods(idx);
+}
+function renderSubmoods(idx){
+  submoodRow.innerHTML='';
+  const cat = MOOD_CATEGORIES[idx];
+  const tKey = todayKey();
+  cat.submoods.forEach((sm, i)=>{
+    const btn = document.createElement('button');
+    btn.className='sub-btn';
+    btn.style.background = sm.color;
+    btn.style.animationDelay = (i*0.05)+'s';
+    btn.textContent = sm.name;
+    if(logs[tKey] && logs[tKey].category===cat.name && logs[tKey].submood===sm.name){
+      btn.classList.add('logged-today');
+    }
+    btn.addEventListener('click', ()=> logMood(cat, sm));
+    submoodRow.appendChild(btn);
+  });
+}
+renderCategories();
+
+/* ===================== LOGGING A MOOD ===================== */
+function logMood(cat, sub){
+  const key = todayKey();
+  logs[key] = { category:cat.name, submood:sub.name, color:sub.color, score:cat.score };
+  saveLogs(logs);
+
+  // status pill
+  const status = document.getElementById('todayStatus');
+  status.style.display='flex';
+  document.getElementById('todaySwatch').style.background = sub.color;
+  document.getElementById('todayStatusText').textContent = `Today logged as ${sub.name} (${cat.name})`;
+
+  if(activeCatIndex !== null) renderSubmoods(activeCatIndex);
+  updateGauges();
+  drawTracker();
+  playForCategory(cat.name, sub.color);
+  growFlowers();
+  refreshQuote();
+}
+
+/* ===================== CIRCULAR TRACKER (31 DAYS) ===================== */
+const trackerSvg = document.getElementById('trackerSvg');
+const CX=140, CY=140;
+const RINGS = [
+  { rStart:0,   rEnd:26,  days:[1] },                       // center circle: day 1
+  { rStart:32,  rEnd:66,  days:range(2,11) },                // ring2: days 2-11
+  { rStart:72,  rEnd:106, days:range(12,21) },                // ring3: days 12-21
+  { rStart:112, rEnd:136, days:range(22,31) },                // ring4: days 22-31
+];
+function range(a,b){ const arr=[]; for(let i=a;i<=b;i++) arr.push(i); return arr; }
+
+function polar(cx,cy,r,angleDeg){
+  const a = (angleDeg-90) * Math.PI/180;
+  return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+}
+function arcPath(cx,cy,rInner,rOuter,startDeg,endDeg){
+  const [x1,y1] = polar(cx,cy,rOuter,startDeg);
+  const [x2,y2] = polar(cx,cy,rOuter,endDeg);
+  const [x3,y3] = polar(cx,cy,rInner,endDeg);
+  const [x4,y4] = polar(cx,cy,rInner,startDeg);
+  const large = (endDeg-startDeg) > 180 ? 1 : 0;
+  return `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${large} 0 ${x4} ${y4} Z`;
+}
+
+function drawTracker(){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const todayNum = now.getDate();
+  let svgParts = [];
+
+  // center day 1
+  const day1Key = `${y}-${String(m+1).padStart(2,'0')}-01`;
+  const day1Color = logs[day1Key] ? logs[day1Key].color : '#F1EAD9';
+  svgParts.push(`<circle cx="${CX}" cy="${CY}" r="${RINGS[0].rEnd}" fill="${day1Color}" stroke="#fff" stroke-width="2" class="${todayNum===1?'today-seg':''}"/>`);
+  if(todayNum===1) svgParts.push(`<circle cx="${CX}" cy="${CY}" r="${RINGS[0].rEnd}" fill="none" stroke="var(--wood-dark)" stroke-width="2.5"/>`);
+
+  for(let ringIdx=1; ringIdx<RINGS.length; ringIdx++){
+    const ring = RINGS[ringIdx];
+    const validDays = ring.days.filter(d=> d<=daysInMonth);
+    const n = ring.days.length; // keep geometry consistent even if month shorter
+    const segDeg = 360/n;
+    ring.days.forEach((dayNum, i)=>{
+      if(dayNum > daysInMonth) return;
+      const key = `${y}-${String(m+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      const fill = logs[key] ? logs[key].color : '#F1EAD9';
+      const start = i*segDeg, end = (i+1)*segDeg - 1.4;
+      const path = arcPath(CX,CY, ring.rStart, ring.rEnd, start, end);
+      const isToday = dayNum === todayNum;
+      svgParts.push(`<path d="${path}" fill="${fill}" stroke="${isToday?'var(--wood-dark)':'#fff'}" stroke-width="${isToday?2.5:1.5}" />`);
+    });
+  }
+  trackerSvg.innerHTML = svgParts.join('');
+}
+
+/* ===================== VINTAGE RADIO SVG ===================== */
+function drawRadio(glowColor){
+  glowColor = glowColor || '#D4A24C';
+  const svg = document.getElementById('radioSvg');
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="woodGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#A9744E"/>
+        <stop offset="100%" stop-color="#6B4126"/>
+      </linearGradient>
+      <radialGradient id="dialGrad" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="${glowColor}" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="${glowColor}" stop-opacity="0.25"/>
+      </radialGradient>
+    </defs>
+    <!-- feet -->
+    <rect x="55" y="222" width="14" height="10" rx="2" fill="#4A3225"/>
+    <rect x="231" y="222" width="14" height="10" rx="2" fill="#4A3225"/>
+    <!-- body -->
+    <rect x="20" y="30" width="260" height="180" rx="22" fill="url(#woodGrad)" stroke="#4A3225" stroke-width="3"/>
+    <rect x="30" y="40" width="240" height="160" rx="16" fill="none" stroke="#DAB682" stroke-width="2" opacity="0.5"/>
+    <!-- speaker grille (left) -->
+    <g class="speaker-hole">
+      ${Array.from({length:5}).map((_,r)=>Array.from({length:6}).map((_,c)=>`<circle cx="${48+c*11}" cy="${70+r*20}" r="4"/>`).join('')).join('')}
+    </g>
+    <!-- dial (right) -->
+    <circle class="dial-glow" cx="205" cy="110" r="46" fill="url(#dialGrad)" stroke="#3E2E23" stroke-width="3"/>
+    <circle cx="205" cy="110" r="46" fill="none" stroke="#F3E5C8" stroke-width="1.5" opacity="0.6"/>
+    <text x="205" y="106" text-anchor="middle" font-family="Fraunces, serif" font-size="10" fill="#3E2E23" opacity="0.75">MOODBLOOM</text>
+    <line x1="205" y1="110" x2="228" y2="96" stroke="#3E2E23" stroke-width="2" id="dialNeedle"/>
+    <!-- knobs -->
+    <g class="knob"><circle cx="60" cy="185" r="12" fill="#C9A15C" stroke="#4A3225" stroke-width="2"/><line x1="60" y1="185" x2="60" y2="176" stroke="#4A3225" stroke-width="2"/></g>
+    <g class="knob"><circle cx="95" cy="185" r="12" fill="#C9A15C" stroke="#4A3225" stroke-width="2"/><line x1="95" y1="185" x2="95" y2="176" stroke="#4A3225" stroke-width="2"/></g>
+    <!-- antenna -->
+    <line x1="245" y1="30" x2="268" y2="-10" stroke="#4A3225" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="268" cy="-10" r="3" fill="#4A3225"/>
+  `;
+}
+drawRadio();
+
+/* ===================== MUSIC PLAYER ===================== */
+const audioEl = document.getElementById('audioEl');
+const playBtn = document.getElementById('playBtn');
+const skipBtn = document.getElementById('skipBtn');
+const restartBtn = document.getElementById('restartBtn');
+const progressTrack = document.getElementById('progressTrack');
+const progressFill = document.getElementById('progressFill');
+const volumeSlider = document.getElementById('volumeSlider');
+const trackNameEl = document.getElementById('trackName');
+const trackCatEl = document.getElementById('trackCat');
+const curTimeEl = document.getElementById('curTime');
+const durTimeEl = document.getElementById('durTime');
+const radioRow = document.getElementById('radioRow');
+
+let currentTrackIdx = 0;
+audioEl.volume = 0.6;
+
+function fmtTime(s){
+  if(!isFinite(s)) return '0:00';
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+function loadTrack(idx, autoplay){
+  currentTrackIdx = idx;
+  const t = TRACKS[idx];
+  audioEl.src = t.src;
+  trackNameEl.textContent = t.name;
+  trackCatEl.textContent = `matched to “${t.cat}”`;
+  drawRadio(matchColorForCat(t.cat));
+  if(autoplay){
+    audioEl.play().then(()=>{
+      radioRow.classList.add('playing');
+      playBtn.textContent='⏸';
+    }).catch(()=>{ /* autoplay may be blocked until user gesture */ });
+  }
+}
+function matchColorForCat(catName){
+  const c = MOOD_CATEGORIES.find(c=>c.name===catName);
+  return c ? c.submoods[0].color : '#D4A24C';
+}
+function playForCategory(catName, subColor){
+  const idx = TRACKS.findIndex(t=>t.cat===catName);
+  loadTrack(idx>=0?idx:0, true);
+  drawRadio(subColor);
+}
+playBtn.addEventListener('click', ()=>{
+  if(!audioEl.src){ loadTrack(0,true); return; }
+  if(audioEl.paused){
+    audioEl.play().then(()=>{radioRow.classList.add('playing'); playBtn.textContent='⏸';}).catch(()=>{});
+  } else {
+    audioEl.pause();
+    radioRow.classList.remove('playing');
+    playBtn.textContent='▶';
+  }
+});
+skipBtn.addEventListener('click', ()=>{
+  loadTrack((currentTrackIdx+1) % TRACKS.length, true);
+});
+restartBtn.addEventListener('click', ()=>{ audioEl.currentTime = 0; });
+volumeSlider.addEventListener('input', e=>{ audioEl.volume = e.target.value/100; });
+audioEl.addEventListener('timeupdate', ()=>{
+  const pct = audioEl.duration ? (audioEl.currentTime/audioEl.duration)*100 : 0;
+  progressFill.style.width = pct+'%';
+  curTimeEl.textContent = fmtTime(audioEl.currentTime);
+  durTimeEl.textContent = fmtTime(audioEl.duration);
+});
+audioEl.addEventListener('ended', ()=>{
+  radioRow.classList.remove('playing');
+  playBtn.textContent='▶';
+});
+progressTrack.addEventListener('click', e=>{
+  if(!audioEl.duration) return;
+  const rect = progressTrack.getBoundingClientRect();
+  const ratio = (e.clientX-rect.left)/rect.width;
+  audioEl.currentTime = ratio*audioEl.duration;
+});
+
+/* ===================== CAT COMPANION ===================== */
+function drawCat(){
+  const svg = document.getElementById('catSvg');
+  svg.innerHTML = `
+    <ellipse cx="75" cy="128" rx="46" ry="14" fill="#00000012"/>
+    <path d="M40 120 C30 90 35 55 75 55 C115 55 120 90 110 120 C100 132 50 132 40 120 Z" fill="#E8B4B8"/>
+    <path d="M45 60 L35 30 L58 52 Z" fill="#E8B4B8"/>
+    <path d="M105 60 L115 30 L92 52 Z" fill="#E8B4B8"/>
+    <path d="M48 60 L42 40 L58 54 Z" fill="#F6D6D8"/>
+    <path d="M102 60 L108 40 L92 54 Z" fill="#F6D6D8"/>
+    <circle cx="60" cy="88" r="6" fill="#3E2E23"/>
+    <circle cx="90" cy="88" r="6" fill="#3E2E23"/>
+    <circle cx="62" cy="86" r="1.6" fill="#fff"/>
+    <circle cx="92" cy="86" r="1.6" fill="#fff"/>
+    <path d="M70 100 Q75 105 80 100" stroke="#3E2E23" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M75 96 L75 100" stroke="#3E2E23" stroke-width="2" stroke-linecap="round"/>
+    <line x1="40" y1="98" x2="18" y2="94" stroke="#3E2E23" stroke-width="1.2"/>
+    <line x1="40" y1="104" x2="18" y2="106" stroke="#3E2E23" stroke-width="1.2"/>
+    <line x1="110" y1="98" x2="132" y2="94" stroke="#3E2E23" stroke-width="1.2"/>
+    <line x1="110" y1="104" x2="132" y2="106" stroke="#3E2E23" stroke-width="1.2"/>
+    <ellipse cx="75" cy="112" rx="9" ry="6" fill="#F6D6D8"/>
+    <path d="M112 118 Q140 110 138 80" stroke="#E8B4B8" stroke-width="10" fill="none" stroke-linecap="round"/>
+  `;
+}
+drawCat();
+function refreshQuote(){
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('quoteBubble').textContent = q;
+}
+refreshQuote();
+
+/* ===================== DAILY STORY ===================== */
+function showDailyStory(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(),0,0);
+  const diff = now - start;
+  const dayOfYear = Math.floor(diff/DAY_MS);
+  const idx = dayOfYear % STORIES.length;
+  document.getElementById('storyText').textContent = STORIES[idx];
+}
+showDailyStory();
+
+/* ===================== FLOWERS ===================== */
+function flowerSvg(color, seed){
+  const petalColors = [color, '#F6D6D8', '#FFE9B3', '#D6EAF8', '#E8D5F5'];
+  const pc = petalColors[seed % petalColors.length];
+  return `<svg width="34" height="46" viewBox="0 0 34 46">
+    <line x1="17" y1="26" x2="17" y2="46" stroke="#8FA789" stroke-width="3"/>
+    <path d="M17 30 C10 30 8 38 4 36" stroke="#8FA789" stroke-width="2" fill="none"/>
+    <g>
+      <circle cx="17" cy="10" r="6" fill="${pc}"/>
+      <circle cx="9" cy="16" r="6" fill="${pc}"/>
+      <circle cx="25" cy="16" r="6" fill="${pc}"/>
+      <circle cx="12" cy="23" r="6" fill="${pc}"/>
+      <circle cx="22" cy="23" r="6" fill="${pc}"/>
+      <circle cx="17" cy="17" r="6" fill="#D4A24C"/>
+    </g>
+  </svg>`;
+}
+function growFlowers(){
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthKeys = Object.keys(logs).filter(k=>k.startsWith(ym)).sort();
+  const field = document.getElementById('flowerField');
+  field.innerHTML='';
+  if(monthKeys.length===0){
+    field.innerHTML = `<div class="empty-field">Log a mood to plant your first flower 🌱</div>`;
+    return;
+  }
+  monthKeys.forEach((k,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className='flower';
+    wrap.style.animationDelay = (i*0.04)+'s';
+    wrap.innerHTML = flowerSvg(logs[k].color, i);
+    field.appendChild(wrap);
+  });
+}
+
+/* ===================== INIT ===================== */
+function restoreTodayStatus(){
+  const key = todayKey();
+  if(logs[key]){
+    const status = document.getElementById('todayStatus');
+    status.style.display='flex';
+    document.getElementById('todaySwatch').style.background = logs[key].color;
+    document.getElementById('todayStatusText').textContent = `Today logged as ${logs[key].submood} (${logs[key].category})`;
+    drawRadio(logs[key].color);
+    const catIdx = MOOD_CATEGORIES.findIndex(c=>c.name===logs[key].category);
+    if(catIdx>=0){
+      const catTrack = TRACKS.findIndex(t=>t.cat===logs[key].category);
+      if(catTrack>=0) loadTrack(catTrack, false);
+    }
+  }
+}
+updateGauges();
+drawTracker();
+growFlowers();
+restoreTodayStatus();
+</script>
+</body>
+</html>
